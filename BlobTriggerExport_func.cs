@@ -6,12 +6,12 @@ using Azure.Storage.Blobs;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 
-namespace BYR.Function
+namespace Foo.Function
 {
     public class BlobTriggerExport_func
     {
         [FunctionName("BlobTriggerExport_func")]
-        public async static Task Run([BlobTrigger("byrideroutboundstoragetest/D365toS3_Manual/{name}", Connection = "AzureWebJobsStorage")]BlobClient inputBlob,
+        public async static Task Run([BlobTrigger("<ContainerName>/<DirectoryName>/{name}", Connection = "AzureWebJobsStorage")]BlobClient inputBlob,
         string name,
         ILogger log)
         {
@@ -19,14 +19,13 @@ namespace BYR.Function
         }
         /*
         ** Open an async read stream on Blob and upload that through AWS Upload Async stream method
-        ** Should probably hide those aws keys
         */
         public async static Task CopyBlob(BlobClient myBlob, string name, ILogger log)
         {
             var keyName = myBlob.Name;
-            var existingBucketName = Environment.GetEnvironmentVariable("etlDevBucketName");
-            var awsAccessKey = Environment.GetEnvironmentVariable("etlDevAwsAccessKey");
-            var awsSecretKey = Environment.GetEnvironmentVariable("etlDevAwsSecretKey");
+            var existingBucketName = Environment.GetEnvironmentVariable("etlProdBucketName");
+            var awsAccessKey = Environment.GetEnvironmentVariable("etlProdAwsAccessKey");
+            var awsSecretKey = Environment.GetEnvironmentVariable("etlProdAwsSecretKey");
 
             TransferUtility fileTransferUtility = new TransferUtility(new AmazonS3Client(awsAccessKey,awsSecretKey,Amazon.RegionEndpoint.USEast1));
 
@@ -38,7 +37,7 @@ namespace BYR.Function
                 {
                     await fileTransferUtility.UploadAsync(stream,existingBucketName,keyName);
                 }
-                log.LogInformation($"Copy completed of {keyName}");
+                log.LogInformation($"Copy completed of ******{keyName}******");
 
             }
             catch(Exception ex)
